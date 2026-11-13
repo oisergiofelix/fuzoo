@@ -61,6 +61,9 @@ Those ~7 MB are the floor for anything that draws in the macOS menu bar (AppKit 
      xattr -dr com.apple.quarantine /Applications/fuzoo.app
      ```
 3. Click the clock → **Open at login**.
+4. **Tip:** your Mac's own clock already shows your local time. To avoid seeing it twice, set it to analog: **System Settings → Control Center → Clock → Clock Options → Analog**. fuzoo then becomes the only digital time in your menu bar.
+
+fuzoo starts next to the system icons, on the right. To move it, hold **⌘** and drag.
 
 Prefer to build it yourself? You only need the Command Line Tools (`xcode-select --install`):
 

@@ -149,7 +149,12 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     }];
     load();
 
+    // Hora mora no canto direito: na primeira execução, o fuzoo nasce colado nos
+    // ícones do sistema. Se a pessoa arrastar (⌘ + arrastar), o macOS lembra.
+    NSString *posKey = @"NSStatusItem Preferred Position fuzoo";
+    if (![defs objectForKey:posKey]) [defs setDouble:1 forKey:posKey];
     item = [NSStatusBar.systemStatusBar statusItemWithLength:NSVariableStatusItemLength];
+    item.autosaveName = @"fuzoo";
     CGFloat size = item.button.font.pointSize;
     item.button.font = [NSFont monospacedDigitSystemFontOfSize:size weight:NSFontWeightRegular];
     NSMenu *m = [NSMenu new];

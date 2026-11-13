@@ -55,6 +55,9 @@ Esses ~7 MB são o piso de qualquer coisa que desenhe na barra de menus do macOS
      xattr -dr com.apple.quarantine /Applications/fuzoo.app
      ```
 3. Clique no relógio → **Iniciar com o sistema**.
+4. **Dica:** o relógio do próprio Mac já mostra a sua hora local. Para não vê-la duas vezes, deixe-o analógico: **Ajustes do Sistema → Central de Controle → Relógio → Opções do Relógio → Analógico**. Aí o fuzoo vira a única hora digital da barra.
+
+O fuzoo nasce ao lado dos ícones do sistema, no canto direito. Para mudar de lugar, segure **⌘** e arraste.
 
 Prefere compilar? Só precisa do Command Line Tools (`xcode-select --install`):
 
