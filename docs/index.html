@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>fuzoo — two time zones in your Mac menu bar</title>
+<meta name="description" content="A tiny open-source macOS menu bar app that shows two time zones. ~7 MB of RAM, 0% CPU, ~100 KB download.">
+<meta property="og:title" content="fuzoo — two time zones in your Mac menu bar">
+<meta property="og:description" content="~7 MB of RAM. 0% CPU. ~100 KB. Nothing else.">
+<meta property="og:image" content="https://oisergiofelix.github.io/fuzoo/og.png">
+<meta property="og:url" content="https://oisergiofelix.github.io/fuzoo/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.png">
+<style>
+:root{--bg:#f5f1e8;--fg:#1a1a1a;--mute:#6b6560;--line:#e2dbcf;--acc:#ff5a1f;--pill:#1a1a1a;--pillfg:#f5f1e8}
+@media (prefers-color-scheme:dark){:root{--bg:#141414;--fg:#f5f1e8;--mute:#9a938b;--line:#2a2724;--pill:#f5f1e8;--pillfg:#141414}}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:720px;margin:auto;padding:0 20px}
+h1,h2,.big{font-family:ui-rounded,system-ui,sans-serif;letter-spacing:-.02em}
+a{color:inherit}
+.pt [lang=en],.en [lang=pt]{display:none}
+nav{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+.logo{display:flex;gap:10px;align-items:center;font:800 22px ui-rounded,system-ui;text-decoration:none}
+.lang{background:none;border:1px solid var(--line);color:var(--mute);border-radius:99px;padding:4px 12px;font:inherit;font-size:14px;cursor:pointer}
+header{padding:72px 0 56px;text-align:center}
+.bar{display:inline-flex;align-items:center;gap:18px;background:var(--pill);color:var(--pillfg);border-radius:99px;padding:12px 28px;font:500 clamp(20px,5vw,30px) ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.bar b{font-weight:500;opacity:.55;margin-right:8px}
+h1{font-size:clamp(40px,9vw,68px);line-height:1.05;font-weight:900;margin:40px 0 16px}
+h1 em{font-style:normal;color:var(--acc)}
+.sub{color:var(--mute);font-size:19px;max-width:520px;margin:auto}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+.btn{display:inline-block;padding:14px 26px;border-radius:99px;text-decoration:none;font-weight:600;border:1px solid var(--line)}
+.btn.main{background:var(--acc);border-color:var(--acc);color:#fff}
+.small{font-size:14px;color:var(--mute);margin-top:12px}
+section{padding:48px 0;border-top:1px solid var(--line)}
+h2{font-size:30px;font-weight:800;margin-bottom:16px}
+p+p{margin-top:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:24px}
+.stat{border:1px solid var(--line);border-radius:16px;padding:18px}
+.big{font-size:clamp(26px,7vw,34px);white-space:nowrap;font-weight:900;line-height:1}
+.stat span{display:block;color:var(--mute);font-size:14px;margin-top:6px}
+ul,ol{padding-left:22px}li+li{margin-top:8px}
+code{font:15px ui-monospace,Menlo,monospace;background:var(--line);padding:2px 6px;border-radius:6px;word-break:break-all}
+footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body class="en">
+<main>
+<nav>
+  <a class="logo" href="./"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="currentColor"/><circle cx="23" cy="11" r="11" fill="#ff5a1f"/><path d="M17 1.8a11 11 0 0 1 0 18.4a11 11 0 0 1 0-18.4z" style="fill:var(--bg)"/></svg>fuzoo</a>
+  <button class="lang" id="lang" type="button">PT</button>
+</nav>
+
+<header>
+  <div class="bar" aria-label="fuzoo menu bar preview"><span><b>CG</b><span id="cg">--:--</span></span><span><b>SP</b><span id="sp">--:--</span></span></div>
+  <h1><span lang="en">Two time zones.<br><em>Nothing else.</em></span><span lang="pt">Dois fusos.<br><em>Mais nada.</em></span></h1>
+  <p class="sub"><span lang="en">A menu bar clock for people who work across time zones, built to use as little of your Mac as possible.</span><span lang="pt">Um relógio de barra de menus para quem trabalha entre fusos, feito para gastar o mínimo possível do seu Mac.</span></p>
+  <div class="cta">
+    <a class="btn main" href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg"><span lang="en">Download for Mac</span><span lang="pt">Baixar para Mac</span></a>
+    <a class="btn" href="https://github.com/oisergiofelix/fuzoo"><span lang="en">Source on GitHub</span><span lang="pt">Código no GitHub</span></a>
+  </div>
+  <p class="small"><span lang="en">Free and open source · macOS 13+ · Apple Silicon &amp; Intel</span><span lang="pt">Grátis e open source · macOS 13+ · Apple Silicon e Intel</span></p>
+</header>
+
+<section>
+  <h2><span lang="en">How small is small?</span><span lang="pt">Pequeno quanto?</span></h2>
+  <div class="stats">
+    <div class="stat"><div class="big">~7.7 MB</div><span lang="en">of memory, the floor for any menu bar app</span><span lang="pt">de memória, o piso de qualquer app de barra</span></div>
+    <div class="stat"><div class="big">0%</div><span lang="en">CPU: wakes once a minute, for microseconds</span><span lang="pt">de CPU: acorda uma vez por minuto</span></div>
+    <div class="stat"><div class="big">~100 KB</div><span lang="en">download, universal binary</span><span lang="pt">para baixar, binário universal</span></div>
+    <div class="stat"><div class="big"><span lang="en">1 file</span><span lang="pt">1 arquivo</span></div><span lang="en">~300 lines, zero dependencies</span><span lang="pt">~300 linhas, zero dependências</span></div>
+  </div>
+</section>
+
+<section>
+  <h2><span lang="en">Why it exists</span><span lang="pt">Por que existe</span></h2>
+  <div lang="en"><p>I work remotely from Campo Grande, one hour behind São Paulo. Every invite, every deadline, every “talk at 3?” meant doing the math in my head.</p><p>The world-clock apps I tried did far more than I needed and used far more memory than a clock should. I wanted two times in the menu bar and a process so small I’d forget it was there. So I built fuzoo.</p></div>
+  <div lang="pt"><p>Trabalho remoto de Campo Grande, uma hora atrás de São Paulo. Todo convite, todo prazo, todo “falamos às 15h?” virava conta de cabeça.</p><p>Os relógios mundiais que testei faziam muito mais do que eu precisava e gastavam muito mais memória do que um relógio deveria. Eu queria dois horários na barra e um processo tão pequeno que eu esquecesse que ele existe. Então fiz o fuzoo.</p></div>
+</section>
+
+<section>
+  <h2><span lang="en">How it stays tiny</span><span lang="pt">Como ele fica pequeno</span></h2>
+  <ul lang="en">
+    <li><strong>One wake-up per minute</strong>, exactly when the minute turns. Correct across sleep and wake.</li>
+    <li><strong>No date formatters.</strong> The time is plain arithmetic on the zone’s offset.</li>
+    <li><strong>Real IANA time zones</strong>, so daylight saving comes from macOS itself.</li>
+    <li><strong>A lazy menu</strong>, built only when you click.</li>
+    <li><strong>Just AppKit.</strong> No frameworks, no helpers, no Electron.</li>
+  </ul>
+  <ul lang="pt">
+    <li><strong>Acorda uma vez por minuto</strong>, exatamente na virada. Continua certo depois que o Mac dorme e acorda.</li>
+    <li><strong>Sem formatadores de data.</strong> A hora é aritmética pura sobre o offset do fuso.</li>
+    <li><strong>Fusos IANA de verdade</strong>, então horário de verão vem do próprio macOS.</li>
+    <li><strong>Menu preguiçoso</strong>, montado só quando você clica.</li>
+    <li><strong>Só AppKit.</strong> Sem frameworks, sem helpers, sem Electron.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span lang="en">Install</span><span lang="pt">Instalar</span></h2>
+  <ol lang="en">
+    <li><a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Download fuzoo.dmg</a> and drag fuzoo into Applications.</li>
+    <li>fuzoo isn’t notarized by Apple yet, so macOS blocks the first launch. Go to <strong>System Settings → Privacy &amp; Security → Open Anyway</strong>, or run <code>xattr -dr com.apple.quarantine /Applications/fuzoo.app</code></li>
+    <li>Click the clock → <strong>Open at login</strong>. Pick other cities from the same menu.</li>
+  </ol>
+  <ol lang="pt">
+    <li><a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Baixe o fuzoo.dmg</a> e arraste o fuzoo para Aplicativos.</li>
+    <li>O fuzoo ainda não é notarizado pela Apple, então o macOS bloqueia a primeira abertura. Vá em <strong>Ajustes do Sistema → Privacidade e Segurança → Abrir Mesmo Assim</strong>, ou rode <code>xattr -dr com.apple.quarantine /Applications/fuzoo.app</code></li>
+    <li>Clique no relógio → <strong>Iniciar com o sistema</strong>. Troque as cidades pelo mesmo menu.</li>
+  </ol>
+</section>
+
+<footer>
+  <span lang="en">This page has no frameworks, no web fonts and no trackers, in the same spirit as the app.</span><span lang="pt">Esta página não tem frameworks, fontes externas nem rastreadores, no mesmo espírito do app.</span>
+  · <a href="https://github.com/oisergiofelix/fuzoo">GitHub</a> · MIT
+</footer>
+</main>
+<script>
+const b=document.body,btn=document.getElementById('lang');
+function set(l){b.className=l;document.documentElement.lang=l==='pt'?'pt-BR':'en';btn.textContent=l==='pt'?'EN':'PT';try{localStorage.lang=l}catch(e){}}
+let saved;try{saved=localStorage.lang}catch(e){}
+set(saved||((navigator.language||'').toLowerCase().startsWith('pt')?'pt':'en'));
+btn.onclick=()=>set(b.className==='pt'?'en':'pt');
+const f=z=>new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZone:z});
+const cg=f('America/Campo_Grande'),sp=f('America/Sao_Paulo');
+function tick(){const d=new Date();document.getElementById('cg').textContent=cg.format(d);document.getElementById('sp').textContent=sp.format(d);setTimeout(tick,60000-d%60000)}
+tick();
+</script>
+</body>
+</html>
