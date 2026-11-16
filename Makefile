@@ -5,7 +5,7 @@ ARCHS   ?= -arch arm64 -arch x86_64
 CFLAGS  := -Os -fobjc-arc -mmacosx-version-min=13.0 -Wall -Wextra -Wno-unused-parameter
 LDFLAGS := -framework AppKit -framework ServiceManagement -Wl,-dead_strip
 
-.PHONY: app run zip dmg release install brand clean
+.PHONY: app run zip dmg release install brand check clean
 
 app: $(BIN)
 
@@ -30,6 +30,11 @@ dmg: app
 	rm -rf build/dmg
 
 release: zip dmg
+
+check: app
+	plutil -lint $(BUNDLE)/Contents/Info.plist
+	codesign --verify --deep --strict $(BUNDLE)
+	lipo $(BIN) -verify_arch arm64 x86_64
 
 install: app
 	rm -rf /Applications/$(APP).app

@@ -20,9 +20,10 @@ main{max-width:720px;margin:auto;padding:0 20px}
 h1,h2,.big{font-family:ui-rounded,system-ui,sans-serif;letter-spacing:-.02em}
 a{color:inherit}
 .pt [lang=en],.en [lang=pt]{display:none}
-nav{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+nav{display:flex;justify-content:space-between;align-items:center;padding:20px 0}nav>span{display:flex;align-items:center;gap:12px}
 .logo{display:flex;gap:10px;align-items:center;font:800 22px ui-rounded,system-ui;text-decoration:none}
 .lang{background:none;border:1px solid var(--line);color:var(--mute);border-radius:99px;padding:4px 12px;font:inherit;font-size:14px;cursor:pointer}
+.roadmap{color:var(--mute);font-size:14px;text-decoration:none}
 header{padding:72px 0 56px;text-align:center}
 .bar{display:inline-flex;align-items:center;gap:18px;background:var(--pill);color:var(--pillfg);border-radius:99px;padding:12px 28px;font:500 clamp(20px,5vw,30px) ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
 .bar b{font-weight:500;opacity:.55;margin-right:8px}
@@ -49,7 +50,7 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
 <main>
 <nav>
   <a class="logo" href="./"><svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="currentColor"/><circle cx="23" cy="11" r="11" fill="#ff5a1f"/><path d="M17 1.8a11 11 0 0 1 0 18.4a11 11 0 0 1 0-18.4z" style="fill:var(--bg)"/></svg>fuzoo</a>
-  <button class="lang" id="lang" type="button">PT</button>
+  <span><a href="roadmap.html" class="roadmap"><span lang="en">Roadmap</span><span lang="pt">Roadmap</span></a><button class="lang" id="lang" type="button">PT</button></span>
 </nav>
 
 <header>
@@ -66,9 +67,9 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
 <section>
   <h2><span lang="en">How small is small?</span><span lang="pt">Pequeno quanto?</span></h2>
   <div class="stats">
-    <div class="stat"><div class="big">~7.7 MB</div><span lang="en">of memory, the floor for any menu bar app</span><span lang="pt">de memória, o piso de qualquer app de barra</span></div>
-    <div class="stat"><div class="big">0%</div><span lang="en">CPU: wakes once a minute, for microseconds</span><span lang="pt">de CPU: acorda uma vez por minuto</span></div>
-    <div class="stat"><div class="big">~100 KB</div><span lang="en">download, universal binary</span><span lang="pt">para baixar, binário universal</span></div>
+    <div class="stat"><div class="big">~7.7 MB</div><span lang="en">memory observed on the development Mac</span><span lang="pt">de memória observada no Mac de desenvolvimento</span></div>
+    <div class="stat"><div class="big">&lt;0.1%</div><span lang="en">CPU while idle; wakes once a minute</span><span lang="pt">de CPU em repouso; acorda uma vez por minuto</span></div>
+    <div class="stat"><div class="big">~115 KB</div><span lang="en">release download, universal binary</span><span lang="pt">download da release, binário universal</span></div>
     <div class="stat"><div class="big"><span lang="en">1 file</span><span lang="pt">1 arquivo</span></div><span lang="en">~300 lines, zero dependencies</span><span lang="pt">~300 linhas, zero dependências</span></div>
   </div>
 </section>
@@ -103,13 +104,13 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
     <li><a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Download fuzoo.dmg</a> and drag fuzoo into Applications.</li>
     <li>fuzoo isn’t notarized by Apple yet, so macOS blocks the first launch. Go to <strong>System Settings → Privacy &amp; Security → Open Anyway</strong>, or run <code>xattr -dr com.apple.quarantine /Applications/fuzoo.app</code></li>
     <li>Click the clock → <strong>Open at login</strong>. Pick other cities from the same menu.</li>
-    <li>Tip: set the Mac’s own clock to analog (<strong>System Settings → Control Center → Clock Options</strong>) so your local time doesn’t show up twice.</li>
+    <li>Tip: set the Mac’s own clock to analog (<strong>System Settings → Control Center → Clock Options</strong>) so your local time doesn’t show up twice. To place fuzoo, hold <strong>⌘</strong> and drag it.</li>
   </ol>
   <ol lang="pt">
     <li><a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Baixe o fuzoo.dmg</a> e arraste o fuzoo para Aplicativos.</li>
     <li>O fuzoo ainda não é notarizado pela Apple, então o macOS bloqueia a primeira abertura. Vá em <strong>Ajustes do Sistema → Privacidade e Segurança → Abrir Mesmo Assim</strong>, ou rode <code>xattr -dr com.apple.quarantine /Applications/fuzoo.app</code></li>
     <li>Clique no relógio → <strong>Iniciar com o sistema</strong>. Troque as cidades pelo mesmo menu.</li>
-    <li>Dica: deixe o relógio do próprio Mac analógico (<strong>Ajustes do Sistema → Central de Controle → Opções do Relógio</strong>) para a sua hora local não aparecer duas vezes.</li>
+    <li>Dica: deixe o relógio do próprio Mac analógico (<strong>Ajustes do Sistema → Central de Controle → Opções do Relógio</strong>) para a sua hora local não aparecer duas vezes. Para posicionar o fuzoo, segure <strong>⌘</strong> e arraste.</li>
   </ol>
 </section>
 

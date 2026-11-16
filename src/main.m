@@ -12,6 +12,7 @@
 #include <time.h>
 
 #define SITE_URL @"https://oisergiofelix.github.io/fuzoo/"
+#define ROADMAP_URL @"https://oisergiofelix.github.io/fuzoo/roadmap.html"
 
 static BOOL pt;  // interface em português se o sistema estiver em português
 #define L(ptString, enString) (pt ? (ptString) : (enString))
@@ -149,10 +150,8 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     }];
     load();
 
-    // Hora mora no canto direito: na primeira execução, o fuzoo nasce colado nos
-    // ícones do sistema. Se a pessoa arrastar (⌘ + arrastar), o macOS lembra.
-    NSString *posKey = @"NSStatusItem Preferred Position fuzoo";
-    if (![defs objectForKey:posKey]) [defs setDouble:1 forKey:posKey];
+    // O macOS controla a ordem dos itens da barra. autosaveName faz com que ele
+    // preserve a posição que a pessoa escolher com ⌘ + arrastar.
     item = [NSStatusBar.systemStatusBar statusItemWithLength:NSVariableStatusItemLength];
     item.autosaveName = @"fuzoo";
     CGFloat size = item.button.font.pointSize;
@@ -229,7 +228,13 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     [self add:m title:login action:@selector(toggleLogin:) obj:nil].state =
         st == SMAppServiceStatusEnabled ? NSControlStateValueOn : NSControlStateValueOff;
     [self add:m title:L(@"Sobre o fuzoo…", @"About fuzoo…") action:@selector(about:) obj:nil];
+    [self add:m title:L(@"Roadmap público", @"Public roadmap") action:@selector(roadmap:) obj:nil];
     [m addItemWithTitle:L(@"Sair", @"Quit") action:@selector(terminate:) keyEquivalent:@"q"];
+}
+
+- (void)menuDidClose:(NSMenu *)m {
+    // Os itens e submenus existem apenas enquanto o menu está aberto.
+    [m removeAllItems];
 }
 
 #pragma mark Ações
@@ -288,6 +293,10 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
 
 - (void)about:(NSMenuItem *)it {
     [NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:SITE_URL]];
+}
+
+- (void)roadmap:(NSMenuItem *)it {
+    [NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:ROADMAP_URL]];
 }
 
 @end

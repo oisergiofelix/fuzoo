@@ -5,6 +5,7 @@
 <p align="center">
   <b>Dois fusos na barra de menus. ~7 MB de RAM. Mais nada.</b><br>
   <a href="https://oisergiofelix.github.io/fuzoo/">Site</a> ·
+  <a href="https://oisergiofelix.github.io/fuzoo/roadmap.html">Roadmap</a> ·
   <a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Baixar para macOS</a> ·
   <a href="README.md">English</a>
 </p>
@@ -29,13 +30,13 @@ Ele vem com Campo Grande e São Paulo. Pelo menu você troca, adiciona ou renome
 
 | | fuzoo |
 |---|---|
-| Memória (`phys_footprint`) | **~7,7 MB** |
-| CPU | **0%**: acorda uma vez por minuto, por microssegundos |
-| Tamanho | **~100 KB** para baixar, binário universal |
+| Memória (`phys_footprint`) | **~7,7 MB observados** |
+| CPU em repouso | **abaixo de 0,1% observado** |
+| Download da release | **~115 KB**, binário universal |
 | Dependências | **nenhuma** |
 | Código | **1 arquivo**, ~300 linhas de Objective-C |
 
-Esses ~7 MB são o piso de qualquer coisa que desenhe na barra de menus do macOS (AppKit e a conexão com o WindowServer). Nós medimos: o mesmo relógio reescrito em C puro, chamando o runtime do Objective-C na mão, gastou *mais*. O código do fuzoo em si ocupa poucos KB.
+O número de memória é uma observação de footprint físico no Mac de desenvolvimento, com o fuzoo em repouso. Em uma comparação pequena, o mesmo relógio reescrito em C puro, chamando o runtime do Objective-C na mão, gastou levemente *mais*. A maior parte vem do AppKit e da conexão com o WindowServer; o código do fuzoo em si ocupa poucos KB.
 
 ### O que deixa ele tão pequeno
 
@@ -57,7 +58,7 @@ Esses ~7 MB são o piso de qualquer coisa que desenhe na barra de menus do macOS
 3. Clique no relógio → **Iniciar com o sistema**.
 4. **Dica:** o relógio do próprio Mac já mostra a sua hora local. Para não vê-la duas vezes, deixe-o analógico: **Ajustes do Sistema → Central de Controle → Relógio → Opções do Relógio → Analógico**. Aí o fuzoo vira a única hora digital da barra.
 
-O fuzoo nasce ao lado dos ícones do sistema, no canto direito. Para mudar de lugar, segure **⌘** e arraste.
+O macOS controla a ordem dos itens da barra. Para colocar o fuzoo onde preferir, segure **⌘** e arraste; o macOS lembra a posição.
 
 Prefere compilar? Só precisa do Command Line Tools (`xcode-select --install`):
 
@@ -72,6 +73,7 @@ Clique no relógio na barra de menus:
 - **Cada relógio** → escolha uma cidade, **Outro fuso…** (qualquer fuso IANA), **Renomear rótulo…** ou **Remover**
 - **Adicionar relógio**
 - **Iniciar com o sistema**
+- **Roadmap público**
 
 A interface segue o idioma do sistema (português ou inglês).
 

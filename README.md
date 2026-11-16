@@ -5,6 +5,7 @@
 <p align="center">
   <b>Two time zones in your menu bar. ~7 MB of RAM. Nothing else.</b><br>
   <a href="https://oisergiofelix.github.io/fuzoo/">Website</a> ·
+  <a href="https://oisergiofelix.github.io/fuzoo/roadmap.html">Roadmap</a> ·
   <a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Download for macOS</a> ·
   <a href="README.pt-BR.md">Português</a>
 </p>
@@ -35,13 +36,13 @@ It ships with Campo Grande and São Paulo. Swap them, add more, or rename the la
 
 | | fuzoo |
 |---|---|
-| Memory (`phys_footprint`) | **~7.7 MB** |
-| CPU | **0%**: wakes once a minute, for microseconds |
-| App size | **~100 KB** download, universal binary |
+| Memory (`phys_footprint`) | **~7.7 MB observed** |
+| CPU while idle | **below 0.1% observed** |
+| Release download | **~115 KB**, universal binary |
 | Dependencies | **none** |
 | Source | **1 file**, ~300 lines of Objective-C |
 
-Those ~7 MB are the floor for anything that draws in the macOS menu bar (AppKit plus the WindowServer connection). We measured it: the same clock rewritten in plain C, calling the Objective-C runtime by hand, used *more*. fuzoo's own code accounts for a few kilobytes.
+The memory figure is a physical-footprint observation from the development Mac while fuzoo is idle. A small comparison with the same clock written in plain C, calling the Objective-C runtime by hand, used slightly more memory. Most of the footprint comes from AppKit and the WindowServer connection; fuzoo's own code is only a few kilobytes.
 
 ### What keeps it tiny
 
@@ -63,7 +64,7 @@ Those ~7 MB are the floor for anything that draws in the macOS menu bar (AppKit 
 3. Click the clock → **Open at login**.
 4. **Tip:** your Mac's own clock already shows your local time. To avoid seeing it twice, set it to analog: **System Settings → Control Center → Clock → Clock Options → Analog**. fuzoo then becomes the only digital time in your menu bar.
 
-fuzoo starts next to the system icons, on the right. To move it, hold **⌘** and drag.
+macOS controls the order of menu-bar items. To place fuzoo where you prefer, hold **⌘** and drag it; macOS remembers the position.
 
 Prefer to build it yourself? You only need the Command Line Tools (`xcode-select --install`):
 
@@ -78,6 +79,7 @@ Click the clock in the menu bar:
 - **Each clock** → pick a city, choose **Other time zone…** (any IANA zone), **Rename label…**, or **Remove**
 - **Add clock**
 - **Open at login**
+- **Public roadmap**
 
 The interface follows your system language (English or Portuguese).
 
