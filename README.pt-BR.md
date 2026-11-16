@@ -36,13 +36,13 @@ Terça, 10 nov · CG 16:16 · SP 17:16
 
 | | fuzoo |
 |---|---|
-| Memória (`phys_footprint`) | **~7,7 MB observados** |
-| CPU em repouso | **abaixo de 0,1% observado** |
-| Download da release | **~115 KB**, binário universal |
+| Memória (`phys_footprint`) | **~14 MB observados** |
+| CPU em repouso | **0,0% observado** |
+| Download da release | **~120 KB**, binário universal |
 | Dependências | **nenhuma** |
-| Código | **1 arquivo**, ~300 linhas de Objective-C |
+| Código | **1 arquivo**, ~380 linhas de Objective-C |
 
-O número de memória é uma observação de footprint físico no Mac de desenvolvimento, com o fuzoo em repouso. Em uma comparação pequena, o mesmo relógio reescrito em C puro, chamando o runtime do Objective-C na mão, gastou levemente *mais*. A maior parte vem do AppKit e da conexão com o WindowServer; o código do fuzoo em si ocupa poucos KB.
+Os números de memória e CPU são observações no Mac de desenvolvimento, com a data ativada e o fuzoo em repouso. Em uma comparação pequena, o mesmo relógio reescrito em C puro, chamando o runtime do Objective-C na mão, gastou levemente *mais*. A maior parte vem do AppKit e da conexão com o WindowServer; o código do fuzoo em si ocupa poucos KB.
 
 ### O que deixa ele tão pequeno
 

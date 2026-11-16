@@ -42,13 +42,13 @@ Tuesday, Nov 10 · CG 16:16 · SP 17:16
 
 | | fuzoo |
 |---|---|
-| Memory (`phys_footprint`) | **~7.7 MB observed** |
-| CPU while idle | **below 0.1% observed** |
-| Release download | **~115 KB**, universal binary |
+| Memory (`phys_footprint`) | **~14 MB observed** |
+| CPU while idle | **0.0% observed** |
+| Release download | **~120 KB**, universal binary |
 | Dependencies | **none** |
-| Source | **1 file**, ~300 lines of Objective-C |
+| Source | **1 file**, ~380 lines of Objective-C |
 
-The memory figure is a physical-footprint observation from the development Mac while fuzoo is idle. A small comparison with the same clock written in plain C, calling the Objective-C runtime by hand, used slightly more memory. Most of the footprint comes from AppKit and the WindowServer connection; fuzoo's own code is only a few kilobytes.
+The memory and CPU figures are observations from the development Mac with the date enabled and fuzoo idle. A small comparison with the same clock written in plain C, calling the Objective-C runtime by hand, used slightly more memory. Most of the footprint comes from AppKit and the WindowServer connection; fuzoo's own code is only a few kilobytes.
 
 ### What keeps it tiny
 

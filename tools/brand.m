@@ -78,7 +78,7 @@ int main(int argc, const char **argv) {
             NSRectFill(r);
             mark(NSMakeRect(96, 300, 230, 230));
             text(@"fuzoo", rounded(150, NSFontWeightBlack), INK, NSMakePoint(370, 318));
-            text(@"Two time zones. ~7 MB. Nothing else.", rounded(44, NSFontWeightMedium), hex(0x6B6560), NSMakePoint(100, 200));
+            text(@"Two time zones. ~14 MB. Nothing else.", rounded(44, NSFontWeightMedium), hex(0x6B6560), NSMakePoint(100, 200));
 
             NSString *clock = @"CG 16:16  SP 17:16";
             NSFont *mono = [NSFont monospacedSystemFontOfSize:40 weight:NSFontWeightMedium];
