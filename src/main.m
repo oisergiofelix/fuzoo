@@ -43,6 +43,38 @@ static NSStatusItem *item;
 static dispatch_source_t timer;
 static NSArray<NSDictionary *> *clocks;  // só entradas válidas: {label, tz}
 static NSArray<NSTimeZone *> *zones;     // alinhado com clocks
+static NSCalendar *dateCalendar;
+static NSInteger dateMode;                // 0 = desligada, 1 = curta
+
+static NSString *const kWeekdaysPT[] = {@"Domingo", @"Segunda", @"Terça", @"Quarta", @"Quinta", @"Sexta", @"Sábado"};
+static NSString *const kMonthsPT[] = {@"janeiro", @"fevereiro", @"março", @"abril", @"maio", @"junho", @"julho", @"agosto", @"setembro", @"outubro", @"novembro", @"dezembro"};
+static NSString *const kMonthsShortPT[] = {@"jan", @"fev", @"mar", @"abr", @"mai", @"jun", @"jul", @"ago", @"set", @"out", @"nov", @"dez"};
+static NSString *const kWeekdaysEN[] = {@"Sunday", @"Monday", @"Tuesday", @"Wednesday", @"Thursday", @"Friday", @"Saturday"};
+static NSString *const kMonthsEN[] = {@"January", @"February", @"March", @"April", @"May", @"June", @"July", @"August", @"September", @"October", @"November", @"December"};
+static NSString *const kMonthsShortEN[] = {@"Jan", @"Feb", @"Mar", @"Apr", @"May", @"Jun", @"Jul", @"Aug", @"Sep", @"Oct", @"Nov", @"Dec"};
+
+static void refreshPresentation(void) {
+    pt = [NSLocale.preferredLanguages.firstObject hasPrefix:@"pt"];
+    dateCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    dateCalendar.timeZone = NSTimeZone.localTimeZone;
+}
+
+static NSString *dateText(NSDate *date, BOOL full) {
+    NSDateComponents *c = [dateCalendar components:NSCalendarUnitWeekday | NSCalendarUnitDay | NSCalendarUnitMonth
+                                          fromDate:date];
+    NSUInteger weekday = MAX(1, c.weekday) - 1, month = MAX(1, c.month) - 1;
+    if (pt) {
+        NSString *m = full ? kMonthsPT[month] : kMonthsShortPT[month];
+        return full ? [NSString stringWithFormat:@"%@, %ld de %@", kWeekdaysPT[weekday], (long)c.day, m]
+                    : [NSString stringWithFormat:@"%@, %ld %@", kWeekdaysPT[weekday], (long)c.day, m];
+    }
+    NSString *m = full ? kMonthsEN[month] : kMonthsShortEN[month];
+    return [NSString stringWithFormat:@"%@, %@ %ld", kWeekdaysEN[weekday], m, (long)c.day];
+}
+
+static long dayNumber(time_t now, NSTimeZone *zone, NSDate *date) {
+    return ((long)now + [zone secondsFromGMTForDate:date]) / 86400;
+}
 
 static void load(void) {
     NSMutableArray *c = [NSMutableArray new], *z = [NSMutableArray new];
@@ -64,13 +96,19 @@ static void tick(void *ctx) {
         time_t now = time(NULL);
         NSDate *date = [NSDate dateWithTimeIntervalSince1970:now];
         NSMutableString *s = [NSMutableString new];
+        long localDay = dayNumber(now, NSTimeZone.localTimeZone, date);
+        if (dateMode) [s appendString:dateText(date, NO)];
         for (NSUInteger i = 0; i < zones.count; i++) {
             long t = ((long)now + [zones[i] secondsFromGMTForDate:date]) % 86400;
             if (t < 0) t += 86400;
             NSString *label = clocks[i][@"label"];
-            if (i) [s appendString:@"  "];
+            if (s.length) [s appendString:dateMode ? @" · " : @"  "];
             if (label.length) [s appendFormat:@"%@ ", label];
             [s appendFormat:@"%02ld:%02ld", t / 3600, t / 60 % 60];
+            if (dateMode) {
+                long delta = dayNumber(now, zones[i], date) - localDay;
+                if (delta) [s appendFormat:@" %+ldd", delta];
+            }
         }
         item.button.title = s.length ? s : @"fuzoo";
 
@@ -148,6 +186,8 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
             @{@"label" : @"SP", @"tz" : @"America/Sao_Paulo"},
         ]
     }];
+    dateMode = [defs integerForKey:@"dateMode"];
+    refreshPresentation();
     load();
 
     // O macOS controla a ordem dos itens da barra. autosaveName faz com que ele
@@ -171,6 +211,14 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
                                                     object:nil
                                                      queue:NSOperationQueue.mainQueue
                                                 usingBlock:^(NSNotification *x) { tick(NULL); }];
+    [NSNotificationCenter.defaultCenter addObserverForName:NSSystemTimeZoneDidChangeNotification
+                                                    object:nil
+                                                     queue:NSOperationQueue.mainQueue
+                                                usingBlock:^(NSNotification *x) { refreshPresentation(); tick(NULL); }];
+    [NSNotificationCenter.defaultCenter addObserverForName:NSCurrentLocaleDidChangeNotification
+                                                    object:nil
+                                                     queue:NSOperationQueue.mainQueue
+                                                usingBlock:^(NSNotification *x) { refreshPresentation(); tick(NULL); }];
 }
 
 #pragma mark Menu (montado sob demanda)
@@ -201,6 +249,10 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
 - (void)menuNeedsUpdate:(NSMenu *)m {
     [m removeAllItems];
 
+    NSMenuItem *today = [m addItemWithTitle:dateText(NSDate.date, YES) action:nil keyEquivalent:@""];
+    today.enabled = NO;
+    [m addItem:NSMenuItem.separatorItem];
+
     for (NSUInteger i = 0; i < clocks.count; i++) {
         NSString *label = clocks[i][@"label"], *tz = clocks[i][@"tz"];
         NSString *t = [NSString stringWithFormat:@"%@%@%@  (%@)", label, label.length ? @" — " : @"",
@@ -221,6 +273,14 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     [m addItemWithTitle:L(@"Adicionar relógio", @"Add clock") action:nil keyEquivalent:@""].submenu = addSub;
 
     [m addItem:NSMenuItem.separatorItem];
+    NSMenu *dateSub = [NSMenu new];
+    dateSub.autoenablesItems = NO;
+    NSMenuItem *off = [self add:dateSub title:L(@"Desligada", @"Off") action:@selector(setDateMode:) obj:@0];
+    off.state = dateMode == 0 ? NSControlStateValueOn : NSControlStateValueOff;
+    NSMenuItem *shortDate = [self add:dateSub title:L(@"Curta", @"Short") action:@selector(setDateMode:) obj:@1];
+    shortDate.state = dateMode == 1 ? NSControlStateValueOn : NSControlStateValueOff;
+    [m addItemWithTitle:L(@"Mostrar data", @"Show date") action:nil keyEquivalent:@""].submenu = dateSub;
+
     SMAppServiceStatus st = SMAppService.mainAppService.status;
     NSString *login = L(@"Iniciar com o sistema", @"Open at login");
     if (st == SMAppServiceStatusRequiresApproval)
@@ -291,6 +351,12 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
                    e.localizedDescription);
 }
 
+- (void)setDateMode:(NSMenuItem *)it {
+    dateMode = [it.representedObject integerValue];
+    [defs setInteger:dateMode forKey:@"dateMode"];
+    tick(NULL);
+}
+
 - (void)about:(NSMenuItem *)it {
     [NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:SITE_URL]];
 }
@@ -303,7 +369,6 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
 
 int main(void) {
     @autoreleasepool {
-        pt = [NSLocale.preferredLanguages.firstObject hasPrefix:@"pt"];
         NSApplication *app = NSApplication.sharedApplication;
         app.activationPolicy = NSApplicationActivationPolicyAccessory;
         Fuzoo *delegate = [Fuzoo new];  // NSApp.delegate é weak; esta referência vive até o fim

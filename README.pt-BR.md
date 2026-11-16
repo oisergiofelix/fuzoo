@@ -26,6 +26,12 @@ CG 16:16  SP 17:16
 
 Ele vem com Campo Grande e São Paulo. Pelo menu você troca, adiciona ou renomeia os relógios.
 
+Ligue **Mostrar data → Curta** para colocar a data local do Mac na barra:
+
+```
+Terça, 10 nov · CG 16:16 · SP 17:16
+```
+
 ## Quão pequeno
 
 | | fuzoo |
@@ -72,6 +78,7 @@ Clique no relógio na barra de menus:
 
 - **Cada relógio** → escolha uma cidade, **Outro fuso…** (qualquer fuso IANA), **Renomear rótulo…** ou **Remover**
 - **Adicionar relógio**
+- **Mostrar data** → Desligada ou Curta. O menu sempre mostra a data local completa.
 - **Iniciar com o sistema**
 - **Roadmap público**
 

@@ -32,6 +32,12 @@ CG 16:16  SP 17:16
 
 It ships with Campo Grande and São Paulo. Swap them, add more, or rename the labels from the menu.
 
+Turn on **Show date → Short** to add your Mac’s local date to the bar:
+
+```
+Tuesday, Nov 10 · CG 16:16 · SP 17:16
+```
+
 ## How small
 
 | | fuzoo |
@@ -78,6 +84,7 @@ Click the clock in the menu bar:
 
 - **Each clock** → pick a city, choose **Other time zone…** (any IANA zone), **Rename label…**, or **Remove**
 - **Add clock**
+- **Show date** → Off or Short. The menu always shows the full local date.
 - **Open at login**
 - **Public roadmap**
 
