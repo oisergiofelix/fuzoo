@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b>Dois fusos na barra de menus. ~7 MB de RAM. Mais nada.</b><br>
+  <b>Dois fusos na barra de menus. ~14 MB de RAM observados. Mais nada.</b><br>
   <a href="https://oisergiofelix.github.io/fuzoo/">Site</a> ·
   <a href="https://oisergiofelix.github.io/fuzoo/roadmap.html">Roadmap</a> ·
   <a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Baixar para macOS</a> ·
@@ -37,12 +37,12 @@ Terça, 10 nov · CG 16:16 · SP 17:16
 | | fuzoo |
 |---|---|
 | Memória (`phys_footprint`) | **~14 MB observados** |
-| CPU em repouso | **0,0% observado** |
+| CPU em repouso | **0,0% observado** com o monitor desligado |
 | Download da release | **~120 KB**, binário universal |
 | Dependências | **nenhuma** |
-| Código | **1 arquivo**, ~380 linhas de Objective-C |
+| Código | **1 arquivo**, ~570 linhas de Objective-C |
 
-Os números de memória e CPU são observações no Mac de desenvolvimento, com a data ativada e o fuzoo em repouso. Em uma comparação pequena, o mesmo relógio reescrito em C puro, chamando o runtime do Objective-C na mão, gastou levemente *mais*. A maior parte vem do AppKit e da conexão com o WindowServer; o código do fuzoo em si ocupa poucos KB.
+Os números de memória e CPU são observações no Mac de desenvolvimento, com a data ativada, o monitor opcional desligado e o fuzoo em repouso. Em uma comparação pequena, o mesmo relógio reescrito em C puro, chamando o runtime do Objective-C na mão, gastou levemente *mais*. A maior parte vem do AppKit e da conexão com o WindowServer; o código do fuzoo em si ocupa poucos KB.
 
 ### O que deixa ele tão pequeno
 
@@ -50,6 +50,7 @@ Os números de memória e CPU são observações no Mac de desenvolvimento, com 
 - **Sem formatadores de data.** A hora é aritmética pura sobre o offset UTC do fuso.
 - **Fusos de verdade.** Identificadores IANA (`America/Campo_Grande`), então horário de verão e mudanças de regra vêm do próprio macOS.
 - **Menu preguiçoso.** Ele só é montado quando você clica.
+- **Monitor do Mac opcional.** Desligado, ele não tem item de barra, timer nem fonte de pressão de memória. Ligado, amostra o sistema inteiro a cada 30 segundos — nunca processos individuais. O texto conserva a cor nativa da barra; cor é somente um reforço semântico nas barrinhas ou no ponto de status.
 - **Sem frameworks, nibs ou helpers.** Só AppKit.
 
 ## Instalar
@@ -79,6 +80,7 @@ Clique no relógio na barra de menus:
 - **Cada relógio** → escolha uma cidade, **Outro fuso…** (qualquer fuso IANA), **Renomear rótulo…** ou **Remover**
 - **Adicionar relógio**
 - **Mostrar data** → Desligada ou Curta. O menu sempre mostra a data local completa.
+- **Monitor do Mac** → mostra opcionalmente um item separado de saúde: `Mac ok · ▁▂▁▃▂▁`. Ele só amostra enquanto está visível; seu menu mostra CPU, memória aproximada e pressão de memória.
 - **Iniciar com o sistema**
 - **Roadmap público**
 

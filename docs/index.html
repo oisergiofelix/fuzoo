@@ -68,9 +68,9 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
   <h2><span lang="en">How small is small?</span><span lang="pt">Pequeno quanto?</span></h2>
   <div class="stats">
     <div class="stat"><div class="big">~14 MB</div><span lang="en">memory observed with the date enabled</span><span lang="pt">de memória observada com a data ativada</span></div>
-    <div class="stat"><div class="big">0.0%</div><span lang="en">CPU observed while idle; wakes once a minute</span><span lang="pt">de CPU observado em repouso; acorda uma vez por minuto</span></div>
+    <div class="stat"><div class="big">0.0%</div><span lang="en">CPU observed while idle, monitor off; wakes once a minute</span><span lang="pt">de CPU observado em repouso, com monitor desligado; acorda uma vez por minuto</span></div>
     <div class="stat"><div class="big">~120 KB</div><span lang="en">release download, universal binary</span><span lang="pt">download da release, binário universal</span></div>
-    <div class="stat"><div class="big"><span lang="en">1 file</span><span lang="pt">1 arquivo</span></div><span lang="en">~380 lines, zero dependencies</span><span lang="pt">~380 linhas, zero dependências</span></div>
+    <div class="stat"><div class="big"><span lang="en">1 file</span><span lang="pt">1 arquivo</span></div><span lang="en">~570 lines, zero dependencies</span><span lang="pt">~570 linhas, zero dependências</span></div>
   </div>
 </section>
 
@@ -87,12 +87,19 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
 </section>
 
 <section>
+  <h2><span lang="en">Mac health, quietly</span><span lang="pt">Saúde do Mac, sem barulho</span></h2>
+  <p lang="en">Choose <strong>Mac monitor → Show monitor in menu bar</strong> for a separate, optional signal: <code>Mac ok · ▁▂▁▃▂▁</code>. It samples the whole system every 30 seconds only while enabled. Text keeps the menu bar’s native color; green or orange lives only in the trend bars, and a warning uses a small colored dot plus clear text.</p>
+  <p lang="pt">Escolha <strong>Monitor do Mac → Mostrar monitor na barra</strong> para ter um sinal separado e opcional: <code>Mac ok · ▁▂▁▃▂▁</code>. Ele amostra o sistema inteiro a cada 30 segundos somente quando está ligado. O texto conserva a cor nativa da barra; verde ou laranja ficam só nas barrinhas, e um aviso usa ponto colorido pequeno com texto claro.</p>
+</section>
+
+<section>
   <h2><span lang="en">How it stays tiny</span><span lang="pt">Como ele fica pequeno</span></h2>
   <ul lang="en">
     <li><strong>One wake-up per minute</strong>, exactly when the minute turns. Correct across sleep and wake.</li>
     <li><strong>No date formatters.</strong> The time is plain arithmetic on the zone’s offset.</li>
     <li><strong>Real IANA time zones</strong>, so daylight saving comes from macOS itself.</li>
     <li><strong>A lazy menu</strong>, built only when you click.</li>
+    <li><strong>An optional Mac monitor.</strong> Off means no extra item, timer or memory-pressure source; on means one 30-second system sample.</li>
     <li><strong>Just AppKit.</strong> No frameworks, no helpers, no Electron.</li>
   </ul>
   <ul lang="pt">
@@ -100,6 +107,7 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
     <li><strong>Sem formatadores de data.</strong> A hora é aritmética pura sobre o offset do fuso.</li>
     <li><strong>Fusos IANA de verdade</strong>, então horário de verão vem do próprio macOS.</li>
     <li><strong>Menu preguiçoso</strong>, montado só quando você clica.</li>
+    <li><strong>Monitor do Mac opcional.</strong> Desligado não tem item, timer nem fonte de pressão extras; ligado faz uma amostra do sistema a cada 30 segundos.</li>
     <li><strong>Só AppKit.</strong> Sem frameworks, sem helpers, sem Electron.</li>
   </ul>
 </section>

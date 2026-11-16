@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b>Two time zones in your menu bar. ~7 MB of RAM. Nothing else.</b><br>
+  <b>Two time zones in your menu bar. ~14 MB of RAM observed. Nothing else.</b><br>
   <a href="https://oisergiofelix.github.io/fuzoo/">Website</a> ·
   <a href="https://oisergiofelix.github.io/fuzoo/roadmap.html">Roadmap</a> ·
   <a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Download for macOS</a> ·
@@ -43,12 +43,12 @@ Tuesday, Nov 10 · CG 16:16 · SP 17:16
 | | fuzoo |
 |---|---|
 | Memory (`phys_footprint`) | **~14 MB observed** |
-| CPU while idle | **0.0% observed** |
+| CPU while idle | **0.0% observed** with the monitor off |
 | Release download | **~120 KB**, universal binary |
 | Dependencies | **none** |
-| Source | **1 file**, ~380 lines of Objective-C |
+| Source | **1 file**, ~570 lines of Objective-C |
 
-The memory and CPU figures are observations from the development Mac with the date enabled and fuzoo idle. A small comparison with the same clock written in plain C, calling the Objective-C runtime by hand, used slightly more memory. Most of the footprint comes from AppKit and the WindowServer connection; fuzoo's own code is only a few kilobytes.
+The memory and CPU figures are observations from the development Mac with the date enabled, the optional monitor off, and fuzoo idle. A small comparison with the same clock written in plain C, calling the Objective-C runtime by hand, used slightly more memory. Most of the footprint comes from AppKit and the WindowServer connection; fuzoo's own code is only a few kilobytes.
 
 ### What keeps it tiny
 
@@ -56,6 +56,7 @@ The memory and CPU figures are observations from the development Mac with the da
 - **No date formatters.** The time is plain arithmetic on the zone's UTC offset.
 - **Real time zones.** IANA identifiers (`America/Campo_Grande`), so daylight saving and rule changes come from macOS itself.
 - **A lazy menu.** It's built only when you click.
+- **An optional Mac monitor.** When off, it has no status item, timer, or memory-pressure source. When on, it samples the whole system every 30 seconds — never processes individually. Text stays native to the menu bar; color is only a semantic accent in the bars or status dot.
 - **No frameworks, nibs or helpers.** Just AppKit.
 
 ## Install
@@ -85,6 +86,7 @@ Click the clock in the menu bar:
 - **Each clock** → pick a city, choose **Other time zone…** (any IANA zone), **Rename label…**, or **Remove**
 - **Add clock**
 - **Show date** → Off or Short. The menu always shows the full local date.
+- **Mac monitor** → optionally show a separate health item: `Mac ok · ▁▂▁▃▂▁`. It samples only while visible; its own menu shows CPU, approximate memory, and memory pressure.
 - **Open at login**
 - **Public roadmap**
 

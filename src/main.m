@@ -9,6 +9,9 @@
 
 #import <AppKit/AppKit.h>
 #import <ServiceManagement/ServiceManagement.h>
+#include <mach/mach.h>
+#include <mach/mach_host.h>
+#include <mach/vm_statistics.h>
 #include <time.h>
 
 #define SITE_URL @"https://oisergiofelix.github.io/fuzoo/"
@@ -41,10 +44,21 @@ static NSString *const kPresets[][4] = {
 static NSUserDefaults *defs;
 static NSStatusItem *item;
 static dispatch_source_t timer;
+static NSStatusItem *monitorItem;
+static dispatch_source_t monitorTimer;
+static dispatch_source_t memoryPressureSource;
 static NSArray<NSDictionary *> *clocks;  // só entradas válidas: {label, tz}
 static NSArray<NSTimeZone *> *zones;     // alinhado com clocks
 static NSCalendar *dateCalendar;
 static NSInteger dateMode;                // 0 = desligada, 1 = curta
+static host_cpu_load_info_data_t previousCpu;
+static BOOL havePreviousCpu;
+static BOOL haveCpuInterval;
+static NSUInteger cpuPercent, highCpuSamples;
+static uint64_t memoryUsed, memoryTotal;
+static unsigned char cpuHistory[6];
+static NSUInteger cpuHistoryNext;
+static unsigned long memoryPressure = DISPATCH_MEMORYPRESSURE_NORMAL;
 
 static NSString *const kWeekdaysPT[] = {@"Domingo", @"Segunda", @"Terça", @"Quarta", @"Quinta", @"Sexta", @"Sábado"};
 static NSString *const kMonthsPT[] = {@"janeiro", @"fevereiro", @"março", @"abril", @"maio", @"junho", @"julho", @"agosto", @"setembro", @"outubro", @"novembro", @"dezembro"};
@@ -70,6 +84,129 @@ static NSString *dateText(NSDate *date, BOOL full) {
     }
     NSString *m = full ? kMonthsEN[month] : kMonthsShortEN[month];
     return [NSString stringWithFormat:@"%@, %@ %ld", kWeekdaysEN[weekday], m, (long)c.day];
+}
+
+static NSString *memoryPressureText(void) {
+    if (memoryPressure & DISPATCH_MEMORYPRESSURE_CRITICAL)
+        return L(@"Memória crítica", @"Memory critical");
+    if (memoryPressure & DISPATCH_MEMORYPRESSURE_WARN)
+        return L(@"Memória em aviso", @"Memory warning");
+    return L(@"Normal", @"Normal");
+}
+
+static NSString *memorySize(uint64_t bytes) {
+    double gb = (double)bytes / (1024.0 * 1024.0 * 1024.0);
+    return [NSString stringWithFormat:@"%.1f GB", gb];
+}
+
+static NSString *cpuBars(void) {
+    static NSString *const bars[] = {@"▁", @"▂", @"▃", @"▄", @"▆", @"▇"};
+    NSMutableString *s = [NSMutableString stringWithCapacity:6];
+    for (NSUInteger i = 0; i < 6; i++) {
+        unsigned char value = cpuHistory[(cpuHistoryNext + i) % 6];
+        NSUInteger level = value < 10 ? 0 : value < 25 ? 1 : value < 45 ? 2 : value < 65 ? 3 : value < 85 ? 4 : 5;
+        [s appendString:bars[level]];
+    }
+    return s;
+}
+
+static void updateMonitorTitle(void) {
+    if (!monitorItem) return;
+    NSColor *accent = nil;
+    NSString *title;
+    BOOL pressure = memoryPressure & (DISPATCH_MEMORYPRESSURE_WARN | DISPATCH_MEMORYPRESSURE_CRITICAL);
+    if (pressure) {
+        accent = memoryPressure & DISPATCH_MEMORYPRESSURE_CRITICAL ? NSColor.systemRedColor : NSColor.systemOrangeColor;
+        title = [NSString stringWithFormat:@"● %@", memoryPressureText()];
+    } else if (!haveCpuInterval) {
+        title = L(@"Lendo…", @"Reading…");
+    } else {
+        accent = highCpuSamples >= 2 ? NSColor.systemOrangeColor : NSColor.systemGreenColor;
+        title = [NSString stringWithFormat:highCpuSamples >= 2 ? L(@"CPU alta · %@", @"High CPU · %@")
+                                                         : L(@"Mac ok · %@", @"Mac ok · %@"), cpuBars()];
+    }
+    NSMutableAttributedString *styled = [[NSMutableAttributedString alloc] initWithString:title
+                                                                                 attributes:@{NSForegroundColorAttributeName : NSColor.labelColor}];
+    if (pressure) [styled addAttribute:NSForegroundColorAttributeName value:accent range:NSMakeRange(0, 1)];
+    else if (accent) {
+        NSRange bars = [title rangeOfString:cpuBars() options:NSBackwardsSearch];
+        if (bars.location != NSNotFound) [styled addAttribute:NSForegroundColorAttributeName value:accent range:bars];
+    }
+    monitorItem.button.attributedTitle = styled;
+}
+
+static void sampleMonitor(void *ctx) {
+    (void)ctx;
+    @autoreleasepool {
+        host_cpu_load_info_data_t current;
+        mach_msg_type_number_t cpuCount = HOST_CPU_LOAD_INFO_COUNT;
+        kern_return_t cpuResult = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO,
+                                                  (host_info_t)&current, &cpuCount);
+        if (cpuResult == KERN_SUCCESS && havePreviousCpu) {
+            natural_t busy = (current.cpu_ticks[CPU_STATE_USER] - previousCpu.cpu_ticks[CPU_STATE_USER]) +
+                             (current.cpu_ticks[CPU_STATE_SYSTEM] - previousCpu.cpu_ticks[CPU_STATE_SYSTEM]) +
+                             (current.cpu_ticks[CPU_STATE_NICE] - previousCpu.cpu_ticks[CPU_STATE_NICE]);
+            natural_t total = busy + current.cpu_ticks[CPU_STATE_IDLE] - previousCpu.cpu_ticks[CPU_STATE_IDLE];
+            if (total) cpuPercent = (NSUInteger)((100ULL * busy + total / 2) / total);
+            if (!haveCpuInterval) {
+                memset(cpuHistory, MIN(cpuPercent, 100), sizeof cpuHistory);
+                haveCpuInterval = YES;
+            } else {
+                cpuHistory[cpuHistoryNext] = (unsigned char)MIN(cpuPercent, 100);
+                cpuHistoryNext = (cpuHistoryNext + 1) % 6;
+            }
+            if (cpuPercent >= 85) highCpuSamples++; else highCpuSamples = 0;
+        }
+        if (cpuResult == KERN_SUCCESS) { previousCpu = current; havePreviousCpu = YES; }
+
+        vm_statistics64_data_t vm;
+        mach_msg_type_number_t vmCount = HOST_VM_INFO64_COUNT;
+        if (host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info64_t)&vm, &vmCount) == KERN_SUCCESS) {
+            vm_size_t pageSize = 0;
+            host_page_size(mach_host_self(), &pageSize);
+            memoryUsed = ((uint64_t)vm.wire_count + vm.active_count + vm.inactive_count + vm.compressor_page_count) * pageSize;
+            host_basic_info_data_t host;
+            mach_msg_type_number_t hostCount = HOST_BASIC_INFO_COUNT;
+            if (host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)&host, &hostCount) == KERN_SUCCESS)
+                memoryTotal = host.max_mem;
+            if (memoryTotal) memoryUsed = MIN(memoryUsed, memoryTotal);
+        }
+        updateMonitorTitle();
+    }
+}
+
+static void stopMonitor(void) {
+    if (monitorTimer) { dispatch_source_cancel(monitorTimer); monitorTimer = nil; }
+    if (memoryPressureSource) { dispatch_source_cancel(memoryPressureSource); memoryPressureSource = nil; }
+    havePreviousCpu = NO;
+    haveCpuInterval = NO;
+    highCpuSamples = 0;
+    memoryUsed = memoryTotal = 0;
+    memoryPressure = DISPATCH_MEMORYPRESSURE_NORMAL;
+}
+
+static void startMonitor(void) {
+    if (monitorTimer) return;
+    memset(cpuHistory, 0, sizeof cpuHistory);
+    cpuHistoryNext = 0;
+    monitorTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+    dispatch_source_set_event_handler_f(monitorTimer, sampleMonitor);
+    dispatch_source_set_timer(monitorTimer, dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC),
+                              30 * NSEC_PER_SEC, 5 * NSEC_PER_SEC);
+    dispatch_activate(monitorTimer);
+
+    dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_MEMORYPRESSURE, 0,
+                                                        DISPATCH_MEMORYPRESSURE_NORMAL | DISPATCH_MEMORYPRESSURE_WARN | DISPATCH_MEMORYPRESSURE_CRITICAL,
+                                                        dispatch_get_main_queue());
+    memoryPressureSource = source;
+    dispatch_source_set_event_handler(source, ^{
+        unsigned long state = dispatch_source_get_data(source);
+        memoryPressure = state & DISPATCH_MEMORYPRESSURE_CRITICAL ? DISPATCH_MEMORYPRESSURE_CRITICAL :
+                         state & DISPATCH_MEMORYPRESSURE_WARN ? DISPATCH_MEMORYPRESSURE_WARN : DISPATCH_MEMORYPRESSURE_NORMAL;
+        updateMonitorTitle();
+    });
+    dispatch_activate(source);
+    sampleMonitor(NULL);
 }
 
 static long dayNumber(time_t now, NSTimeZone *zone, NSDate *date) {
@@ -184,7 +321,8 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
         @"clocks" : @[
             @{@"label" : @"CG", @"tz" : @"America/Campo_Grande"},
             @{@"label" : @"SP", @"tz" : @"America/Sao_Paulo"},
-        ]
+        ],
+        @"monitorEnabled" : @NO,
     }];
     dateMode = [defs integerForKey:@"dateMode"];
     refreshPresentation();
@@ -200,6 +338,8 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     m.delegate = self;
     m.autoenablesItems = NO;
     item.menu = m;
+
+    if ([defs boolForKey:@"monitorEnabled"]) [self setMonitorEnabled:YES];
 
     timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
     dispatch_source_set_event_handler_f(timer, tick);
@@ -230,6 +370,42 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     return it;
 }
 
+- (void)setMonitorEnabled:(BOOL)enabled {
+    [defs setBool:enabled forKey:@"monitorEnabled"];
+    if (!enabled) {
+        stopMonitor();
+        if (monitorItem) [NSStatusBar.systemStatusBar removeStatusItem:monitorItem];
+        monitorItem = nil;
+        return;
+    }
+    if (!monitorItem) {
+        monitorItem = [NSStatusBar.systemStatusBar statusItemWithLength:NSVariableStatusItemLength];
+        monitorItem.autosaveName = @"fuzoo.monitor";
+        NSMenu *m = [NSMenu new];
+        m.delegate = self;
+        m.autoenablesItems = NO;
+        monitorItem.menu = m;
+    }
+    startMonitor();
+    updateMonitorTitle();
+}
+
+- (void)buildMonitorMenu:(NSMenu *)m {
+    [m removeAllItems];
+    if (!haveCpuInterval) {
+        [m addItemWithTitle:L(@"Lendo a primeira amostra…", @"Taking the first sample…") action:nil keyEquivalent:@""].enabled = NO;
+    } else {
+        [m addItemWithTitle:[NSString stringWithFormat:L(@"CPU (últimos 30 s)  %lu%%", @"CPU (last 30 s)  %lu%%"), (unsigned long)cpuPercent]
+                        action:nil keyEquivalent:@""].enabled = NO;
+        NSString *memory = memoryTotal ? [NSString stringWithFormat:L(@"Memória (aprox.)  %@ de %@", @"Memory (approx.)  %@ of %@"), memorySize(memoryUsed), memorySize(memoryTotal)] : @"—";
+        [m addItemWithTitle:memory action:nil keyEquivalent:@""].enabled = NO;
+        [m addItemWithTitle:[NSString stringWithFormat:L(@"Pressão de memória  %@", @"Memory pressure  %@"), memoryPressureText()]
+                        action:nil keyEquivalent:@""].enabled = NO;
+    }
+    [m addItem:NSMenuItem.separatorItem];
+    [self add:m title:L(@"Ocultar monitor", @"Hide monitor") action:@selector(toggleMonitor:) obj:nil];
+}
+
 - (void)addPresets:(NSMenu *)m forClock:(NSUInteger)i current:(NSString *)tz {
     for (NSUInteger p = 0; p < NPRESETS; p++) {
         NSString *name = kPresets[p][pt ? 1 : 2];
@@ -247,6 +423,7 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
 }
 
 - (void)menuNeedsUpdate:(NSMenu *)m {
+    if (m == monitorItem.menu) { [self buildMonitorMenu:m]; return; }
     [m removeAllItems];
 
     NSMenuItem *today = [m addItemWithTitle:dateText(NSDate.date, YES) action:nil keyEquivalent:@""];
@@ -280,6 +457,12 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     NSMenuItem *shortDate = [self add:dateSub title:L(@"Curta", @"Short") action:@selector(setDateMode:) obj:@1];
     shortDate.state = dateMode == 1 ? NSControlStateValueOn : NSControlStateValueOff;
     [m addItemWithTitle:L(@"Mostrar data", @"Show date") action:nil keyEquivalent:@""].submenu = dateSub;
+
+    NSMenu *monitorSub = [NSMenu new];
+    monitorSub.autoenablesItems = NO;
+    NSMenuItem *showMonitor = [self add:monitorSub title:L(@"Mostrar monitor na barra", @"Show monitor in menu bar") action:@selector(toggleMonitor:) obj:nil];
+    showMonitor.state = monitorItem ? NSControlStateValueOn : NSControlStateValueOff;
+    [m addItemWithTitle:L(@"Monitor do Mac", @"Mac monitor") action:nil keyEquivalent:@""].submenu = monitorSub;
 
     SMAppServiceStatus st = SMAppService.mainAppService.status;
     NSString *login = L(@"Iniciar com o sistema", @"Open at login");
@@ -355,6 +538,10 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     dateMode = [it.representedObject integerValue];
     [defs setInteger:dateMode forKey:@"dateMode"];
     tick(NULL);
+}
+
+- (void)toggleMonitor:(NSMenuItem *)it {
+    [self setMonitorEnabled:!monitorItem];
 }
 
 - (void)about:(NSMenuItem *)it {
