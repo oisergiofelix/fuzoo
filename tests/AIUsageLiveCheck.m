@@ -36,7 +36,7 @@ int main(int argc, const char *argv[]) {
                 [usage setValue:snapshot forKey:key];
             }
             [usage refreshIfNeeded];
-            NSCAssert([item.button.title isEqual:@"● Codex — · ● Claude —"], @"Stale balances hidden, never shown as zero");
+            NSCAssert([item.button.title containsString:@"?"], @"Stale balances hidden, never shown as zero");
             [usage acceptResult:@{@"codex": @{@"state": @"http_error", @"http_status": @429, @"retry_after_seconds": @3600}}];
             [usage refreshNow:nil];
             NSCAssert(![usage valueForKey:@"task"], @"Manual refresh respects the service retry window");

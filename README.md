@@ -41,8 +41,8 @@ Tuesday, Nov 10 · CG 16:16 · SP 17:16
 ## AI usage limits
 
 Choose **Connect AI usage limits…**, then select Codex, Claude, or both. It adds a
-separate item such as `Codex 92% · Claude 81%`: **remaining in the current
-session**. Click for weekly balances, reset time, and reading age.
+separate item with local app icons and numbers, such as `[Codex] 92 : [Claude] 81`: **remaining in the current
+session**. Names appear when icons are unavailable. Click for information blocks with weekly balances, reset time, and reading age.
 
 The connection is explained before its first query. It uses only the existing
 Codex login and/or Claude session, never saves, displays, or forwards tokens.

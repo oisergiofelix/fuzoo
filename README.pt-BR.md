@@ -35,8 +35,8 @@ Terça, 10 nov · CG 16:16 · SP 17:16
 ## Limites de IA
 
 Escolha **Conectar limites de IA…** e selecione Codex, Claude ou ambos. O fuzoo mostra,
-em um item separado, por exemplo `Codex 92% · Claude 81%`: o **saldo restante da
-sessão atual**. Clique para ver a semana, o reset e a idade de cada leitura.
+em um item separado, com ícones locais dos apps e números, por exemplo `[Codex] 92 : [Claude] 81`: o **saldo restante da
+sessão atual**. Se os ícones não estiverem disponíveis, aparecem os nomes. Clique para ver blocos informativos com a semana, o reset e a idade de cada leitura.
 
 A conexão é explicada antes da primeira consulta. Ela usa somente o login já
 existente do Codex e/ou a sessão do Claude, sem salvar, exibir ou encaminhar

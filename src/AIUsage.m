@@ -40,8 +40,39 @@ NSString *AIWindowRemaining(id window, NSDate *now) {
 }
 
 static NSString *titleBalance(NSDictionary *snapshot, NSDate *now) {
-    if (!snapshot || [snapshot[@"reset"] compare:now] != NSOrderedDescending) return @"—";
+    if (!snapshot || [snapshot[@"reset"] compare:now] != NSOrderedDescending) return @"?";
     return [NSString stringWithFormat:@"%.0f", [snapshot[@"remaining"] doubleValue]];
+}
+
+static NSImage *localMenuBarIcon(NSString *templatePath, CGFloat size, NSArray<NSString *> *bundleIDs, NSArray<NSString *> *paths) {
+    NSString *retinaPath = [[templatePath stringByDeletingPathExtension] stringByAppendingString:@"@2x.png"];
+    NSImage *template = [[NSImage alloc] initWithContentsOfFile:retinaPath];
+    if (!template) template = [[NSImage alloc] initWithContentsOfFile:templatePath];
+    if (template) { template.template = YES; template.size = NSMakeSize(size, size); return template; }
+    for (NSString *identifier in bundleIDs) {
+        NSRunningApplication *app = [NSRunningApplication runningApplicationsWithBundleIdentifier:identifier].firstObject;
+        if (app.bundleURL) { NSImage *icon = [NSWorkspace.sharedWorkspace iconForFile:app.bundleURL.path]; icon.size = NSMakeSize(size, size); return icon; }
+    }
+    for (NSString *path in paths) if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
+        NSImage *icon = [NSWorkspace.sharedWorkspace iconForFile:path]; icon.size = NSMakeSize(size, size); return icon;
+    }
+    return nil;
+}
+
+@interface AIIconCell : NSTextAttachmentCell
+@end
+@implementation AIIconCell
+- (NSPoint)cellBaselineOffset {
+    // Keep the visual centre fixed as the icon's optical size changes.
+    return NSMakePoint(0, -4 - (self.image.size.height - 18) / 2);
+}
+@end
+
+static NSAttributedString *iconText(NSImage *image, NSString *fallback, NSDictionary *attributes) {
+    if (!image) return [[NSAttributedString alloc] initWithString:fallback attributes:attributes];
+    NSTextAttachment *attachment = [NSTextAttachment new];
+    attachment.attachmentCell = [[AIIconCell alloc] initImageCell:image];
+    return [NSAttributedString attributedStringWithAttachment:attachment];
 }
 
 @interface AIUsage ()
@@ -57,6 +88,7 @@ static NSString *titleBalance(NSDictionary *snapshot, NSDate *now) {
 @property id terminationObserver;
 @property id wakeObserver;
 @property BOOL codexEnabled, claudeEnabled;
+@property NSImage *codexIcon, *claudeIcon;
 @end
 
 @implementation AIUsage
@@ -64,6 +96,8 @@ static NSString *titleBalance(NSDictionary *snapshot, NSDate *now) {
     if (!(self = [super init])) return nil;
     _helperURL = [NSBundle.mainBundle.bundleURL URLByAppendingPathComponent:@"Contents/Helpers/UsageBridge.app"];
     _interval = 60;
+    _codexIcon = localMenuBarIcon(@"/Applications/ChatGPT.app/Contents/Resources/chatgptTemplate.png", 18, @[], @[]);
+    _claudeIcon = localMenuBarIcon(@"/Applications/Claude.app/Contents/Resources/TrayIconTemplate.png", 22, @[], @[]);
     _codexEnabled = [NSUserDefaults.standardUserDefaults boolForKey:@"aiUsageCodexEnabled"];
     _claudeEnabled = [NSUserDefaults.standardUserDefaults boolForKey:@"aiUsageClaudeEnabled"];
     _item = [NSStatusBar.systemStatusBar statusItemWithLength:NSVariableStatusItemLength];
@@ -94,24 +128,29 @@ static NSString *titleBalance(NSDictionary *snapshot, NSDate *now) {
     NSDate *now = NSDate.date;
     NSMutableAttributedString *title = [NSMutableAttributedString new];
     NSDictionary *normal = @{ NSFontAttributeName: self.item.button.font, NSForegroundColorAttributeName: NSColor.labelColor };
-    NSArray *providers = @[@[@"Codex", self.codex ?: @{}, @(self.codexEnabled)], @[@"Claude", self.claude ?: @{}, @(self.claudeEnabled)]];
+    NSImage *codexIcon = self.codexIcon;
+    NSImage *claudeIcon = self.claudeIcon;
+    NSArray *providers = @[@[@"Codex", self.codex ?: @{}, @(self.codexEnabled), codexIcon ?: NSNull.null], @[@"Claude", self.claude ?: @{}, @(self.claudeEnabled), claudeIcon ?: NSNull.null]];
     BOOL first = YES;
     for (NSArray *provider in providers) {
         if (![provider[2] boolValue]) continue;
         NSDictionary *snapshot = provider[1];
-        NSString *balance = [self fresh:snapshot at:now] ? titleBalance(snapshot[@"session"], now) : @"—";
-        if (!first) [title appendAttributedString:[[NSAttributedString alloc] initWithString:@" · " attributes:normal]];
+        NSString *balance = [self fresh:snapshot at:now] ? titleBalance(snapshot[@"session"], now) : @"?";
+        if (!first) [title appendAttributedString:[[NSAttributedString alloc] initWithString:@" : " attributes:normal]];
         first = NO;
         // Color is deliberately an exception signal, never a second text color.
         NSColor *accent = nil;
-        if ([balance isEqual:@"—"]) accent = NSColor.secondaryLabelColor;
+        if ([balance isEqual:@"?"]) accent = NSColor.secondaryLabelColor;
         else if (balance.integerValue < 10) accent = NSColor.systemRedColor;
         else if (balance.integerValue < 30) accent = NSColor.systemOrangeColor;
         if (accent) [title appendAttributedString:[[NSAttributedString alloc] initWithString:@"● " attributes:@{ NSFontAttributeName: self.item.button.font, NSForegroundColorAttributeName: accent }]];
-        [title appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@ %@", provider[0], balance] attributes:normal]];
+        NSImage *icon = provider[3] == NSNull.null ? nil : provider[3];
+        [title appendAttributedString:iconText(icon, provider[0], normal)];
+        [title appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" %@", balance] attributes:normal]];
     }
     if (!title.length) [title appendAttributedString:[[NSAttributedString alloc] initWithString:text(@"IA não configurada", @"AI not configured") attributes:normal]];
     self.item.button.attributedTitle = title;
+    self.item.button.accessibilityLabel = [NSString stringWithFormat:@"Codex %@, Claude %@", [self fresh:self.codex at:now] ? titleBalance(self.codex[@"session"], now) : @"unavailable", [self fresh:self.claude at:now] ? titleBalance(self.claude[@"session"], now) : @"unavailable"];
     self.item.button.toolTip = text(@"Percentual restante da sessão atual. Consulta local, no máximo uma vez por minuto.",
                                    @"Remaining in the current session. Local query, at most once a minute.");
 }
@@ -173,18 +212,62 @@ static NSString *titleBalance(NSDictionary *snapshot, NSDate *now) {
     [self updateTitle];
 }
 - (void)row:(NSMenu *)menu title:(NSString *)title {
-    [menu addItemWithTitle:title action:nil keyEquivalent:@""].enabled = NO;
+    // Informational rows are labels, not disabled commands. Native disabled
+    // menu text is too faint over a translucent menu background.
+    NSMenuItem *row = [menu addItemWithTitle:title action:nil keyEquivalent:@""];
+    NSView *view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 350, 25)];
+    NSTextField *label = [NSTextField labelWithString:title];
+    label.font = [NSFont systemFontOfSize:13];
+    label.textColor = NSColor.labelColor;
+    label.frame = NSMakeRect(16, 4, 320, 18);
+    BOOL heading = [title isEqual:@"Codex"] || [title isEqual:@"Claude"];
+    BOOL metadata = [title hasPrefix:@"Atualizado"] || [title hasPrefix:@"Updated"] || [title hasPrefix:@"Limites de IA"] || [title hasPrefix:@"AI limits"];
+    if (heading) label.font = [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
+    if (metadata) { label.font = [NSFont systemFontOfSize:11]; label.textColor = NSColor.secondaryLabelColor; }
+    NSRange reset = [title rangeOfString:@" - "];
+    if (reset.location != NSNotFound && !metadata) {
+        label.stringValue = [title substringToIndex:reset.location];
+        label.font = [NSFont monospacedDigitSystemFontOfSize:13 weight:NSFontWeightMedium];
+        NSTextField *detail = [NSTextField labelWithString:[title substringFromIndex:NSMaxRange(reset)]];
+        detail.font = [NSFont systemFontOfSize:11]; detail.textColor = NSColor.secondaryLabelColor;
+        detail.frame = NSMakeRect(16, 2, 320, 16);
+        label.frame = NSMakeRect(16, 19, 320, 18);
+        view.frame = NSMakeRect(0, 0, 350, 40);
+        [view addSubview:detail];
+    }
+    [view addSubview:label]; row.view = view;
+}
+- (void)appendInfoBlock:(NSMenu *)source to:(NSMenu *)destination {
+    CGFloat height = 12;
+    for (NSMenuItem *row in source.itemArray) height += row.view.frame.size.height;
+    NSView *block = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 350, height)];
+    CGFloat top = height - 6;
+    for (NSMenuItem *row in source.itemArray) {
+        NSView *view = row.view;
+        // Detach ownership before reparenting. Otherwise source-menu teardown
+        // removes its item views from the destination block as well.
+        row.view = nil;
+        top -= view.frame.size.height;
+        view.frame = NSMakeRect(0, top, 350, view.frame.size.height);
+        [block addSubview:view];
+    }
+    NSMenuItem *item = [NSMenuItem new]; item.view = block;
+    [destination addItem:item];
+    [source removeAllItems];
+    NSAssert(block.subviews.count > 0, @"Provider information must survive temporary menu teardown");
 }
 - (void)provider:(NSString *)name snapshot:(NSDictionary *)snapshot error:(NSString *)error menu:(NSMenu *)menu {
+    NSMenu *destination = menu;
+    menu = [NSMenu new];
     [self row:menu title:name];
     NSDate *now = NSDate.date;
-    if (!snapshot) { [self row:menu title:error ?: text(@"Aguardando consulta…", @"Waiting for usage…")]; return; }
+    if (!snapshot) { [self row:menu title:error ?: text(@"Aguardando consulta…", @"Waiting for usage…")]; [self appendInfoBlock:menu to:destination]; return; }
     BOOL fresh = [self fresh:snapshot at:now];
     for (NSString *key in @[@"session", @"weekly"]) {
         NSDictionary *window = snapshot[key];
-        NSString *label = [key isEqual:@"session"] ? text(@"5 horas", @"5 hours") : text(@"Semana", @"Week");
+        if (!window) continue;
+        NSString *label = [key isEqual:@"session"] ? text(@"Sessão", @"Session") : text(@"Semana", @"Week");
         NSString *value = fresh ? AIWindowRemaining(window, now) : @"—";
-        [self row:menu title:[NSString stringWithFormat:text(@"%@: %@ restantes", @"%@: %@ remaining"), label, value]];
         NSDate *reset = window[@"reset"];
         if (reset) {
             NSInteger minutes = (NSInteger)ceil([reset timeIntervalSinceDate:now] / 60);
@@ -193,15 +276,18 @@ static NSString *titleBalance(NSDictionary *snapshot, NSDate *now) {
             else if (minutes >= 60) remaining = [NSString stringWithFormat:text(@"Reinicia em %ldh %02ldmin", @"Resets in %ldh %02ldmin"), (long)minutes / 60, (long)minutes % 60];
             else if (minutes > 0) remaining = [NSString stringWithFormat:text(@"Reinicia em %ld min", @"Resets in %ld min"), (long)minutes];
             else remaining = text(@"Janela encerrada; aguardando nova consulta", @"Window ended; awaiting a new reading");
-            [self row:menu title:remaining];
+            [self row:menu title:[NSString stringWithFormat:@"%@: %@ - %@", label, value, remaining]];
         }
     }
     NSInteger age = MAX(0, (NSInteger)[now timeIntervalSinceDate:snapshot[@"received"]] / 60);
-    [self row:menu title:[NSString stringWithFormat:text(@"Atualizado há %ld min%@", @"Updated %ld min ago%@"), (long)age,
-                         fresh ? @"" : text(@" · desatualizado", @" · stale")]];
+    [self row:menu title:age == 0 ? text(@"Atualizado agora", @"Updated just now") : [NSString stringWithFormat:text(@"Atualizado há %ld min%@", @"Updated %ld min ago%@"), (long)age,
+                         fresh ? @"" : text(@" - desatualizado", @" - stale")]];
+    [self appendInfoBlock:menu to:destination];
 }
 - (void)menuNeedsUpdate:(NSMenu *)menu {
     [menu removeAllItems];
+    [self row:menu title:text(@"Limites de IA - saldo restante", @"AI limits - remaining allowance")];
+    [menu addItem:NSMenuItem.separatorItem];
     if (self.codexEnabled) [self provider:@"Codex" snapshot:self.codex error:self.codexError menu:menu];
     if (self.codexEnabled && self.claudeEnabled) [menu addItem:NSMenuItem.separatorItem];
     if (self.claudeEnabled) [self provider:@"Claude" snapshot:self.claude error:self.claudeError menu:menu];
@@ -210,9 +296,10 @@ static NSString *titleBalance(NSDictionary *snapshot, NSDate *now) {
     refresh.target = self;
     refresh.enabled = !self.task && NSProcessInfo.processInfo.systemUptime >= self.retryNotBefore &&
         (!self.attempted || NSProcessInfo.processInfo.systemUptime - self.lastAttempt >= 60);
-    NSMenuItem *connect = [menu addItemWithTitle:text(@"Conectar Claude…", @"Connect Claude…") action:@selector(connectClaude:) keyEquivalent:@""];
-    connect.target = self;
-    [self row:menu title:text(@"Consulta automática a cada 1 min; erros podem aumentar o intervalo.", @"Refreshes every 1 min; errors can increase the interval.")];
+    if (self.claudeEnabled && !self.claude) {
+        NSMenuItem *connect = [menu addItemWithTitle:text(@"Reconectar Claude…", @"Reconnect Claude…") action:@selector(connectClaude:) keyEquivalent:@""];
+        connect.target = self;
+    }
 }
 - (void)menuDidClose:(NSMenu *)menu { [menu removeAllItems]; }
 - (void)refreshNow:(id)sender { self.interval = 0; [self refreshIfNeeded]; }
