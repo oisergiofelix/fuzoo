@@ -2,13 +2,14 @@
 // fuzoo — tiny world clocks for the macOS menu bar.
 //
 // Princípios / principles:
-//   - um arquivo, sem dependências além do AppKit;
+//   - interface nativa, sem dependências de terceiros;
 //   - acorda uma vez por minuto, na virada exata, via timer de relógio de parede;
 //   - hora calculada com aritmética (offset do fuso), sem DateFormatter;
 //   - o menu só é montado quando alguém clica.
 
 #import <AppKit/AppKit.h>
 #import <ServiceManagement/ServiceManagement.h>
+#import "AIUsage.h"
 #include <mach/mach.h>
 #include <mach/mach_host.h>
 #include <mach/vm_statistics.h>
@@ -47,6 +48,7 @@ static dispatch_source_t timer;
 static NSStatusItem *monitorItem;
 static dispatch_source_t monitorTimer;
 static dispatch_source_t memoryPressureSource;
+static AIUsage *aiUsage; // nil while disabled: no helper process or extra timer.
 static NSArray<NSDictionary *> *clocks;  // só entradas válidas: {label, tz}
 static NSArray<NSTimeZone *> *zones;     // alinhado com clocks
 static NSCalendar *dateCalendar;
@@ -248,6 +250,7 @@ static void tick(void *ctx) {
             }
         }
         item.button.title = s.length ? s : @"fuzoo";
+        [aiUsage refreshIfNeeded];
 
         // Próximo disparo: exatamente na virada do minuto (relógio de parede,
         // então sobrevive a sono/despertar). 1 s de folga para o sistema agrupar.
@@ -323,6 +326,7 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
             @{@"label" : @"SP", @"tz" : @"America/Sao_Paulo"},
         ],
         @"monitorEnabled" : @NO,
+        @"aiUsageEnabled" : @NO,
     }];
     dateMode = [defs integerForKey:@"dateMode"];
     refreshPresentation();
@@ -340,6 +344,8 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     item.menu = m;
 
     if ([defs boolForKey:@"monitorEnabled"]) [self setMonitorEnabled:YES];
+    if ([defs boolForKey:@"aiUsageEnabled"] && [defs boolForKey:@"aiUsageOnboarded"] &&
+        ([defs boolForKey:@"aiUsageCodexEnabled"] || [defs boolForKey:@"aiUsageClaudeEnabled"])) aiUsage = [AIUsage new];
 
     timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
     dispatch_source_set_event_handler_f(timer, tick);
@@ -362,6 +368,11 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
 }
 
 #pragma mark Menu (montado sob demanda)
+
+- (void)applicationWillTerminate:(NSNotification *)notification {
+    [aiUsage stop];
+    stopMonitor();
+}
 
 - (NSMenuItem *)add:(NSMenu *)m title:(NSString *)title action:(SEL)action obj:(id)obj {
     NSMenuItem *it = [m addItemWithTitle:title action:action keyEquivalent:@""];
@@ -464,6 +475,12 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
     showMonitor.state = monitorItem ? NSControlStateValueOn : NSControlStateValueOff;
     [m addItemWithTitle:L(@"Monitor do Mac", @"Mac monitor") action:nil keyEquivalent:@""].submenu = monitorSub;
 
+    if (aiUsage) {
+        [self add:m title:L(@"Ocultar limites de IA", @"Hide AI usage limits") action:@selector(toggleAIUsage:) obj:nil];
+    } else {
+        [self add:m title:L(@"Conectar limites de IA…", @"Connect AI usage limits…") action:@selector(toggleAIUsage:) obj:nil];
+    }
+
     SMAppServiceStatus st = SMAppService.mainAppService.status;
     NSString *login = L(@"Iniciar com o sistema", @"Open at login");
     if (st == SMAppServiceStatusRequiresApproval)
@@ -542,6 +559,28 @@ static NSArray<NSString *> *ask(NSString *title, NSString *label, NSString *tz, 
 
 - (void)toggleMonitor:(NSMenuItem *)it {
     [self setMonitorEnabled:!monitorItem];
+}
+
+- (void)toggleAIUsage:(NSMenuItem *)it {
+    if (aiUsage) { [aiUsage stop]; aiUsage = nil; }
+    else {
+        if (![defs boolForKey:@"aiUsageOnboarded"] ||
+            (![defs boolForKey:@"aiUsageCodexEnabled"] && ![defs boolForKey:@"aiUsageClaudeEnabled"])) {
+            NSAlert *a = [NSAlert new];
+            a.messageText = L(@"Conectar limites de IA", @"Connect AI usage limits");
+            a.informativeText = L(@"O fuzoo consulta somente os limites da sua sessão já conectada, localmente e no máximo uma vez por minuto. Nenhum token é salvo, mostrado ou enviado a outro lugar. Escolha o que quer acompanhar.", @"fuzoo reads only the limits from your already connected sessions, locally and at most once per minute. No token is saved, shown, or sent anywhere else. Choose what to track.");
+            NSButton *codex = [[NSButton alloc] initWithFrame:NSMakeRect(0, 26, 360, 24)]; codex.buttonType = NSButtonTypeSwitch; codex.title = @"Codex"; codex.state = NSControlStateValueOn;
+            NSButton *claude = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 360, 24)]; claude.buttonType = NSButtonTypeSwitch; claude.title = @"Claude"; claude.state = NSControlStateValueOn;
+            NSView *v = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 360, 52)]; [v addSubview:codex]; [v addSubview:claude]; a.accessoryView = v;
+            [a addButtonWithTitle:L(@"Conectar", @"Connect")]; [a addButtonWithTitle:L(@"Agora não", @"Not now")];
+            if ([a runModal] != NSAlertFirstButtonReturn || (codex.state != NSControlStateValueOn && claude.state != NSControlStateValueOn)) return;
+            [defs setBool:codex.state == NSControlStateValueOn forKey:@"aiUsageCodexEnabled"];
+            [defs setBool:claude.state == NSControlStateValueOn forKey:@"aiUsageClaudeEnabled"];
+            [defs setBool:YES forKey:@"aiUsageOnboarded"];
+        }
+        aiUsage = [AIUsage new]; [aiUsage refreshIfNeeded];
+    }
+    [defs setBool:aiUsage != nil forKey:@"aiUsageEnabled"];
 }
 
 - (void)about:(NSMenuItem *)it {

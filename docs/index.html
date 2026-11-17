@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>fuzoo — two time zones in your Mac menu bar</title>
-<meta name="description" content="A tiny open-source macOS menu bar app that shows two time zones. ~14 MB of RAM, 0% CPU while idle, ~120 KB download.">
+<meta name="description" content="A tiny open-source macOS menu bar app that shows two time zones. ~8.5 MB of RAM observed, 0% CPU while idle, ~190 KB download.">
 <meta property="og:title" content="fuzoo — two time zones in your Mac menu bar">
-<meta property="og:description" content="~14 MB of RAM. 0% CPU while idle. ~120 KB. Nothing else.">
+<meta property="og:description" content="~8.5 MB of RAM observed. 0% CPU while idle. ~190 KB. Nothing else.">
 <meta property="og:image" content="https://oisergiofelix.github.io/fuzoo/og.png">
 <meta property="og:url" content="https://oisergiofelix.github.io/fuzoo/">
 <meta name="twitter:card" content="summary_large_image">
@@ -67,10 +67,10 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
 <section>
   <h2><span lang="en">How small is small?</span><span lang="pt">Pequeno quanto?</span></h2>
   <div class="stats">
-    <div class="stat"><div class="big">~14 MB</div><span lang="en">memory observed with the date enabled</span><span lang="pt">de memória observada com a data ativada</span></div>
+    <div class="stat"><div class="big">~8.5 MB</div><span lang="en">memory observed with optional features off</span><span lang="pt">de memória observada com recursos opcionais desligados</span></div>
     <div class="stat"><div class="big">0.0%</div><span lang="en">CPU observed while idle, monitor off; wakes once a minute</span><span lang="pt">de CPU observado em repouso, com monitor desligado; acorda uma vez por minuto</span></div>
-    <div class="stat"><div class="big">~120 KB</div><span lang="en">release download, universal binary</span><span lang="pt">download da release, binário universal</span></div>
-    <div class="stat"><div class="big"><span lang="en">1 file</span><span lang="pt">1 arquivo</span></div><span lang="en">~570 lines, zero dependencies</span><span lang="pt">~570 linhas, zero dependências</span></div>
+    <div class="stat"><div class="big">~190 KB</div><span lang="en">release download, universal binary</span><span lang="pt">download da release, binário universal</span></div>
+    <div class="stat"><div class="big"><span lang="en">native</span><span lang="pt">nativo</span></div><span lang="en">Objective-C, AppKit, zero third-party dependencies</span><span lang="pt">Objective-C, AppKit, zero dependências de terceiros</span></div>
   </div>
 </section>
 
@@ -93,6 +93,12 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
 </section>
 
 <section>
+  <h2><span lang="en">Limits without a detour</span><span lang="pt">Limites sem desvio</span></h2>
+  <p lang="en">Choose <strong>Connect AI usage limits…</strong> in fuzoo’s menu, select Codex, Claude, or both, and get a separate local status item: <code>Codex 74 · Claude 90</code>. It refreshes at most once a minute, shows reset details on click, and uses color only when a balance needs attention. It never appears before you connect it.</p>
+  <p lang="pt">Escolha <strong>Conectar limites de IA…</strong> no menu do fuzoo, selecione Codex, Claude ou ambos e receba um item local separado: <code>Codex 74 · Claude 90</code>. Ele atualiza no máximo uma vez por minuto, mostra os resets ao clicar e usa cor apenas quando um saldo pede atenção. Ele nunca aparece antes de você conectá-lo.</p>
+</section>
+
+<section>
   <h2><span lang="en">How it stays tiny</span><span lang="pt">Como ele fica pequeno</span></h2>
   <ul lang="en">
     <li><strong>One wake-up per minute</strong>, exactly when the minute turns. Correct across sleep and wake.</li>
@@ -100,7 +106,7 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
     <li><strong>Real IANA time zones</strong>, so daylight saving comes from macOS itself.</li>
     <li><strong>A lazy menu</strong>, built only when you click.</li>
     <li><strong>An optional Mac monitor.</strong> Off means no extra item, timer or memory-pressure source; on means one 30-second system sample.</li>
-    <li><strong>Just AppKit.</strong> No frameworks, no helpers, no Electron.</li>
+    <li><strong>Just AppKit.</strong> No frameworks or Electron. Optional AI readings use a short-lived native helper and no resident agent.</li>
   </ul>
   <ul lang="pt">
     <li><strong>Acorda uma vez por minuto</strong>, exatamente na virada. Continua certo depois que o Mac dorme e acorda.</li>
@@ -108,7 +114,7 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px;border-top:1px solid
     <li><strong>Fusos IANA de verdade</strong>, então horário de verão vem do próprio macOS.</li>
     <li><strong>Menu preguiçoso</strong>, montado só quando você clica.</li>
     <li><strong>Monitor do Mac opcional.</strong> Desligado não tem item, timer nem fonte de pressão extras; ligado faz uma amostra do sistema a cada 30 segundos.</li>
-    <li><strong>Só AppKit.</strong> Sem frameworks, sem helpers, sem Electron.</li>
+    <li><strong>Só AppKit.</strong> Sem frameworks ou Electron. A leitura opcional de IA usa um conector nativo breve, sem agente residente.</li>
   </ul>
 </section>
 

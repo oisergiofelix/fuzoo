@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b>Dois fusos na barra de menus. ~14 MB de RAM observados. Mais nada.</b><br>
+  <b>Dois fusos na barra de menus. ~8,5 MB de RAM observados. Mais nada.</b><br>
   <a href="https://oisergiofelix.github.io/fuzoo/">Site</a> ·
   <a href="https://oisergiofelix.github.io/fuzoo/roadmap.html">Roadmap</a> ·
   <a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Baixar para macOS</a> ·
@@ -32,15 +32,37 @@ Ligue **Mostrar data → Curta** para colocar a data local do Mac na barra:
 Terça, 10 nov · CG 16:16 · SP 17:16
 ```
 
+## Limites de IA
+
+Escolha **Conectar limites de IA…** e selecione Codex, Claude ou ambos. O fuzoo mostra,
+em um item separado, por exemplo `Codex 92% · Claude 81%`: o **saldo restante da
+sessão atual**. Clique para ver a semana, o reset e a idade de cada leitura.
+
+A conexão é explicada antes da primeira consulta. Ela usa somente o login já
+existente do Codex e/ou a sessão do Claude, sem salvar, exibir ou encaminhar
+tokens. **Conectar ou reparar Claude…** trata a autorização do Chaves quando ela
+for necessária. Não precisa de Acessibilidade. Cada provedor é consultado no
+máximo uma vez por minuto; uma falha ou pausa aumenta apenas as tentativas futuras.
+Saldo indisponível, expirado ou antigo aparece como `—`. Os endpoints são internos
+e podem mudar.
+
+Para uma instalação nova: ative o item, selecione os provedores e confira o
+primeiro saldo. Se Claude ficar indisponível, clique em **Conectar ou reparar
+Claude…**, permita o acesso solicitado pelo Chaves e feche a confirmação. O app
+verifica a leitura silenciosa antes de considerar a sessão utilizável.
+
 ## Quão pequeno
+
+As medições abaixo são observações de desenvolvimento da v0.5.0, com os recursos
+opcionais desligados. Os recursos opcionais têm custo somente quando ligados.
 
 | | fuzoo |
 |---|---|
-| Memória (`phys_footprint`) | **~14 MB observados** |
+| Memória (`phys_footprint`) | **~8,5 MB observados** |
 | CPU em repouso | **0,0% observado** com o monitor desligado |
-| Download da release | **~120 KB**, binário universal |
+| Download da release | **~190 KB**, binário universal |
 | Dependências | **nenhuma** |
-| Código | **1 arquivo**, ~570 linhas de Objective-C |
+| Código | Objective-C / AppKit nativo, sem dependências de terceiros |
 
 Os números de memória e CPU são observações no Mac de desenvolvimento, com a data ativada, o monitor opcional desligado e o fuzoo em repouso. Em uma comparação pequena, o mesmo relógio reescrito em C puro, chamando o runtime do Objective-C na mão, gastou levemente *mais*. A maior parte vem do AppKit e da conexão com o WindowServer; o código do fuzoo em si ocupa poucos KB.
 
@@ -51,7 +73,7 @@ Os números de memória e CPU são observações no Mac de desenvolvimento, com 
 - **Fusos de verdade.** Identificadores IANA (`America/Campo_Grande`), então horário de verão e mudanças de regra vêm do próprio macOS.
 - **Menu preguiçoso.** Ele só é montado quando você clica.
 - **Monitor do Mac opcional.** Desligado, ele não tem item de barra, timer nem fonte de pressão de memória. Ligado, amostra o sistema inteiro a cada 30 segundos — nunca processos individuais. O texto conserva a cor nativa da barra; cor é somente um reforço semântico nas barrinhas ou no ponto de status.
-- **Sem frameworks, nibs ou helpers.** Só AppKit.
+- **Interface nativa.** AppKit, sem navegador embutido. O conector opcional de IA executa por pouco tempo em cada consulta e encerra.
 
 ## Instalar
 
@@ -73,6 +95,16 @@ Prefere compilar? Só precisa do Command Line Tools (`xcode-select --install`):
 git clone https://github.com/oisergiofelix/fuzoo && cd fuzoo && make install
 ```
 
+### Assinatura e atualizações
+
+Builds locais são assinados ad hoc e podem precisar de uma nova confirmação do
+Chaves quando o binário do conector muda. A release de produção usará um único
+certificado **Developer ID Application**, com runtime endurecido, assinatura de
+todos os executáveis internos e notarização da Apple. É essa identidade estável —
+e não um truque de código — que permite ao Chaves reconhecer o conector entre
+atualizações. `make production-check SIGN_IDENTITY="Developer ID Application: …"`
+impede por engano uma distribuição ad hoc.
+
 ## Usar
 
 Clique no relógio na barra de menus:
@@ -81,6 +113,7 @@ Clique no relógio na barra de menus:
 - **Adicionar relógio**
 - **Mostrar data** → Desligada ou Curta. O menu sempre mostra a data local completa.
 - **Monitor do Mac** → mostra opcionalmente um item separado de saúde: `Mac ok · ▁▂▁▃▂▁`. Ele só amostra enquanto está visível; seu menu mostra CPU, memória aproximada e pressão de memória.
+- **Conectar limites de IA…** → escolha Codex, Claude ou ambos. O item só aparece após a conexão; mostra o saldo atual, o reset e alertas discretos quando uma cota está baixa.
 - **Iniciar com o sistema**
 - **Roadmap público**
 

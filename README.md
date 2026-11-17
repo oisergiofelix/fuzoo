@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b>Two time zones in your menu bar. ~14 MB of RAM observed. Nothing else.</b><br>
+  <b>Two time zones in your menu bar. ~8.5 MB of RAM observed. Nothing else.</b><br>
   <a href="https://oisergiofelix.github.io/fuzoo/">Website</a> ·
   <a href="https://oisergiofelix.github.io/fuzoo/roadmap.html">Roadmap</a> ·
   <a href="https://github.com/oisergiofelix/fuzoo/releases/latest/download/fuzoo.dmg">Download for macOS</a> ·
@@ -38,15 +38,36 @@ Turn on **Show date → Short** to add your Mac’s local date to the bar:
 Tuesday, Nov 10 · CG 16:16 · SP 17:16
 ```
 
+## AI usage limits
+
+Choose **Connect AI usage limits…**, then select Codex, Claude, or both. It adds a
+separate item such as `Codex 92% · Claude 81%`: **remaining in the current
+session**. Click for weekly balances, reset time, and reading age.
+
+The connection is explained before its first query. It uses only the existing
+Codex login and/or Claude session, never saves, displays, or forwards tokens.
+**Connect or repair Claude…** handles a needed macOS Keychain authorization.
+No Accessibility permission is required. Each provider is queried at most once a
+minute; failures or service pauses slow future retries. Unavailable, expired, or
+stale balances appear as `—`. The usage endpoints are internal and can change.
+
+On a new installation: enable the item, select providers, and verify the first
+balance. If Claude is unavailable, use **Connect or repair Claude…**, allow the
+Keychain prompt, and close the confirmation. The app verifies a silent read before
+calling the session usable.
+
 ## How small
+
+The measurements below are v0.5.0 development observations with optional
+features off. Optional features have a cost only while enabled.
 
 | | fuzoo |
 |---|---|
-| Memory (`phys_footprint`) | **~14 MB observed** |
+| Memory (`phys_footprint`) | **~8.5 MB observed** |
 | CPU while idle | **0.0% observed** with the monitor off |
-| Release download | **~120 KB**, universal binary |
+| Release download | **~190 KB**, universal binary |
 | Dependencies | **none** |
-| Source | **1 file**, ~570 lines of Objective-C |
+| Source | Native Objective-C / AppKit, no third-party dependencies |
 
 The memory and CPU figures are observations from the development Mac with the date enabled, the optional monitor off, and fuzoo idle. A small comparison with the same clock written in plain C, calling the Objective-C runtime by hand, used slightly more memory. Most of the footprint comes from AppKit and the WindowServer connection; fuzoo's own code is only a few kilobytes.
 
@@ -57,7 +78,7 @@ The memory and CPU figures are observations from the development Mac with the da
 - **Real time zones.** IANA identifiers (`America/Campo_Grande`), so daylight saving and rule changes come from macOS itself.
 - **A lazy menu.** It's built only when you click.
 - **An optional Mac monitor.** When off, it has no status item, timer, or memory-pressure source. When on, it samples the whole system every 30 seconds — never processes individually. Text stays native to the menu bar; color is only a semantic accent in the bars or status dot.
-- **No frameworks, nibs or helpers.** Just AppKit.
+- **Native UI.** AppKit, without an embedded browser. The optional AI helper runs briefly for each refresh, then exits.
 
 ## Install
 
@@ -78,6 +99,16 @@ Prefer to build it yourself? You only need the Command Line Tools (`xcode-select
 ```bash
 git clone https://github.com/oisergiofelix/fuzoo && cd fuzoo && make install
 ```
+
+### Signing and updates
+
+Local builds are ad-hoc signed and may need a new Keychain confirmation when the
+helper binary changes. Production distribution will use one **Developer ID
+Application** certificate, hardened runtime, signing for every nested executable,
+and Apple notarization. That stable identity — not a code trick — is what lets
+Keychain recognize the helper across updates. `make production-check
+SIGN_IDENTITY="Developer ID Application: …"` prevents an accidental ad-hoc
+distribution.
 
 ## Use
 
